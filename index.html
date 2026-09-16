@@ -156,7 +156,7 @@ table.dt tr:last-child td{border-bottom:none}
 /* modal */
 .modal-bg{position:fixed;inset:0;background:rgba(15,25,20,.5);display:none;align-items:center;justify-content:center;z-index:80;padding:18px}
 .modal-bg.show{display:flex}
-.modal{background:var(--papel);border-radius:var(--r);max-width:440px;width:100%;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal{background:var(--papel);border-radius:var(--r);max-width:440px;width:100%;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.3);max-height:calc(100dvh - 36px);overflow-y:auto}
 .modal h3{font-size:20px;margin-bottom:8px}
 .modal p{font-size:14.5px;color:var(--suave);margin-bottom:20px}
 .modal .row{display:flex;gap:10px;justify-content:flex-end}
@@ -257,12 +257,15 @@ function setTopbar(papel,who){
 }
 async function sair(){
   if(sessao.admin){try{await sb.auth.signOut();}catch(e){}}
+  try{ if(typeof canalRealtime!=='undefined' && canalRealtime){ sb.removeChannel(canalRealtime); canalRealtime=null; } }catch(e){}
+  if(pollTimer){clearInterval(pollTimer);pollTimer=null;}
   sessao={papel:null,codigo:null,cliente:null,admin:null,prof_nome:null};
   setTopbar(null);
   telaInicial();
   window.scrollTo(0,0);
 }
-function render(html){app.innerHTML=html;window.scrollTo(0,0);}
+let pollTimer=null;
+function render(html){if(pollTimer){clearInterval(pollTimer);pollTimer=null;}app.innerHTML=html;window.scrollTo(0,0);}
 
 /* ============ helpers de formulário ============ */
 // grupo de chips (multi) — devolve array marcada
@@ -563,18 +566,19 @@ async function painelParente(){
   parTab('hist');
 }
 function parTab(t){
+  if(pollTimer){clearInterval(pollTimer);pollTimer=null;}
   document.querySelectorAll('.subnav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
-  if(t==='hist')parHistorico();
-  if(t==='med')parMedicacao();
+  if(t==='hist'){parHistorico();pollTimer=setInterval(()=>parHistorico(true),25000);}
+  if(t==='med'){parMedicacao();pollTimer=setInterval(()=>parMedicacao(true),25000);}
   if(t==='plano')telaOrientacoesParente();
 }
-async function parHistorico(){
-  const body=$('#par-body');body.innerHTML=`<p class="muted">Carregando histórico…</p>`;
+async function parHistorico(silencioso){
+  const body=$('#par-body');if(!silencioso)body.innerHTML=`<p class="muted">Carregando histórico…</p>`;
   try{
     const ds=await rpc('cuid_plano_diarios',{p_codigo:sessao.codigo,p_dias:30});
     if(!ds.length){body.innerHTML=`<div class="painel empty"><h3>Ainda sem registros</h3><p>Os plantões aparecem aqui assim que o cuidador preenche o diário.</p></div>`;return;}
     body.innerHTML=ds.map(cardDiario).join('');
-  }catch(e){body.innerHTML=`<div class="painel empty"><h3>Erro</h3><p>${esc(e.message)}</p></div>`;}
+  }catch(e){if(!silencioso)body.innerHTML=`<div class="painel empty"><h3>Erro</h3><p>${esc(e.message)}</p></div>`;}
 }
 function estBadge(v){if(!v)return'';const bad=/atenção|não|muito|triste|irritad|diarreia|constipa|alteração/i.test(v);const med=/regular|mais ou menos|parcial|pouco|oscil|dificuldade|confus/i.test(v);
   const cls=bad?'bad':med?'med':'ok';const cor={ok:'var(--ok-bg);color:var(--ok)',med:'var(--atencao-bg);color:var(--atencao)',bad:'var(--alerta-bg);color:var(--alerta)'}[cls];
@@ -603,8 +607,8 @@ function cardDiario(d){
     ${d.recado_contratante?`<p class="small mt8"><b class="muted">Recado:</b> ${esc(d.recado_contratante)}</p>`:''}
   </div>`;
 }
-async function parMedicacao(){
-  const body=$('#par-body');body.innerHTML=`<p class="muted">Carregando…</p>`;
+async function parMedicacao(silencioso){
+  const body=$('#par-body');if(!silencioso)body.innerHTML=`<p class="muted">Carregando…</p>`;
   try{
     const [meds,regs]=await Promise.all([
       rpc('cuid_plano_medicamentos',{p_codigo:sessao.codigo}),
@@ -616,7 +620,7 @@ async function parMedicacao(){
       (m.horarios&&m.horarios.length?m.horarios:['—']).forEach(hora=>{const on=feito.has(m.id+'|'+(hora==='—'?'':hora));
         h+=`<div class="med-item"><div class="med-check ${on?'on':''}" style="pointer-events:none"></div><b>${esc(hora)}</b><div class="sp"></div><span class="muted small">${on?'Administrado':'Pendente'}</span></div>`;});});
     h+=`</div>`;body.innerHTML=h;
-  }catch(e){body.innerHTML=`<div class="painel empty"><h3>Erro</h3><p>${esc(e.message)}</p></div>`;}
+  }catch(e){if(!silencioso)body.innerHTML=`<div class="painel empty"><h3>Erro</h3><p>${esc(e.message)}</p></div>`;}
 }
 function telaOrientacoesParente(){
   const body=$('#par-body');const c=sessao.cliente;
