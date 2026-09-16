@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dedica Saúde — Sistema de Cuidado</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --tinta:#132a24;        /* verde petróleo escuro p/ títulos */
+  --tinta-2:#1d3d34;
+  --musgo:#0f7a5f;        /* verde clínico (primária) */
+  --musgo-cl:#3aa585;
+  --areia:#eef2f1;        /* fundo neutro frio (não creme) */
+  --papel:#ffffff;
+  --linha:#dde5e2;
+  --linha-2:#eaefed;
+  --texto:#182420;
+  --suave:#5f6f69;
+  --alerta:#c0392b;
+  --alerta-bg:#fbe9e6;
+  --atencao:#9a6b12;
+  --atencao-bg:#f7edd6;
+  --ok:#0f7a5f;
+  --ok-bg:#e2f1ec;
+  --branco:#ffffff;
+  --r:12px;
+  --r-sm:9px;
+  --sombra:0 1px 2px rgba(19,42,36,.05), 0 6px 18px rgba(19,42,36,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--areia);color:var(--texto);font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5}
+body{min-height:100dvh}
+h1,h2,h3{font-family:Inter,system-ui,sans-serif;font-weight:700;line-height:1.18;letter-spacing:-.02em;color:var(--tinta)}
+a{color:var(--musgo)}
+.wrap{max-width:1040px;margin:0 auto;padding:0 18px}
+.narrow{max-width:560px}
+
+/* ---------- topo ---------- */
+header.top{background:var(--tinta);color:#eaf3ee;position:sticky;top:0;z-index:40}
+header.top .wrap{display:flex;align-items:center;gap:14px;height:60px}
+.brand{display:flex;align-items:center;gap:11px;font-family:Inter,sans-serif;font-size:19px;font-weight:700;color:#fff;letter-spacing:-.02em}
+.brand .mark{width:30px;height:30px;border-radius:8px;background:linear-gradient(150deg,var(--musgo-cl),var(--musgo));display:grid;place-items:center;color:#fff;font-weight:600;font-family:Inter;font-size:15px}
+.brand small{display:block;font-family:Inter;font-size:11px;color:#9cc3b2;font-weight:500;letter-spacing:.02em;margin-top:1px}
+.top .sp{flex:1}
+.top .who{font-size:13px;color:#a9cabb}
+.btn-sair{background:transparent;border:1px solid #3a5a4c;color:#cfe4d9;padding:6px 12px;border-radius:8px;font-size:13px;cursor:pointer}
+.btn-sair:hover{background:#1c3a2f}
+
+/* ---------- botões ---------- */
+.btn{font:inherit;font-weight:600;font-size:15px;border:none;border-radius:var(--r-sm);padding:12px 18px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:filter .12s,background .12s,border-color .12s;line-height:1.1}
+.btn.primary{background:var(--musgo);color:#fff}
+.btn.primary:hover{filter:brightness(1.06)}
+.btn.dark{background:var(--tinta);color:#fff}
+.btn.dark:hover{background:var(--tinta-2)}
+.btn.ghost{background:var(--branco);color:var(--tinta);border:1px solid var(--linha)}
+.btn.ghost:hover{border-color:var(--musgo);color:var(--musgo)}
+.btn.sm{padding:8px 13px;font-size:13.5px;border-radius:8px}
+.btn.danger{background:var(--alerta);color:#fff}
+.btn.danger:hover{filter:brightness(1.06)}
+.btn.wide{width:100%}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-link{background:none;border:none;color:var(--musgo);font:inherit;font-weight:600;cursor:pointer;padding:0}
+.btn-voltar{background:none;border:none;color:var(--suave);font:inherit;font-size:14px;cursor:pointer;padding:6px 0;display:inline-flex;align-items:center;gap:6px}
+.btn-voltar:hover{color:var(--tinta)}
+
+/* ---------- cartões ---------- */
+.card{background:var(--papel);border:1px solid var(--linha);border-radius:var(--r);box-shadow:var(--sombra)}
+.card.pad{padding:22px}
+.painel{background:var(--branco);border:1px solid var(--linha);border-radius:var(--r);padding:20px;box-shadow:var(--sombra)}
+
+/* ---------- formulários ---------- */
+label.f{display:block;font-size:13.5px;font-weight:600;color:var(--tinta);margin:0 0 6px}
+.hint{font-size:12.5px;color:var(--suave);font-weight:400;margin-top:-2px;margin-bottom:6px}
+input[type=text],input[type=number],input[type=date],input[type=email],input[type=tel],input[type=password],input[type=month],select,textarea{
+  width:100%;font:inherit;font-size:15px;color:var(--texto);background:var(--branco);
+  border:1px solid var(--linha);border-radius:9px;padding:11px 12px;transition:border-color .12s,box-shadow .12s}
+textarea{resize:vertical;min-height:80px;line-height:1.5}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--musgo);box-shadow:0 0 0 3px rgba(47,107,83,.14)}
+select{appearance:none;background-image:url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%235c6b63' d='M6 8 0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;padding-right:34px}
+.field{margin-bottom:16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+@media(max-width:620px){.grid2,.grid3{grid-template-columns:1fr}}
+fieldset{border:none;margin:0 0 18px}
+.blocotitulo{font-family:Inter,sans-serif;font-weight:700;font-size:17px;color:var(--tinta);margin:26px 0 4px;padding-bottom:8px;border-bottom:1px solid var(--linha)}
+.blocotitulo:first-child{margin-top:0}
+.blocosub{font-size:13px;color:var(--suave);margin:0 0 16px}
+
+/* chips de seleção (checkbox/radio custom) */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{position:relative;display:inline-flex;align-items:center;gap:7px;font-size:14px;padding:8px 13px;border:1px solid var(--linha);border-radius:999px;background:var(--branco);cursor:pointer;user-select:none;transition:all .12s}
+.chip input{position:absolute;opacity:0;inset:0;cursor:pointer;margin:0}
+.chip:hover{border-color:var(--musgo-cl)}
+.chip.on{background:var(--ok-bg);border-color:var(--musgo);color:var(--tinta);font-weight:600}
+.chip .dot{width:15px;height:15px;border-radius:5px;border:1.5px solid var(--linha);display:grid;place-items:center;flex:none;transition:all .12s}
+.chip.radio .dot{border-radius:999px}
+.chip.on .dot{background:var(--musgo);border-color:var(--musgo)}
+.chip.on .dot::after{content:"";width:6px;height:6px;background:#fff;border-radius:1px;display:block}
+.chip.radio.on .dot::after{border-radius:999px}
+
+/* estado (bem/regular/atenção) */
+.estado{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.estado.q4{grid-template-columns:1fr 1fr}
+.estado label{display:flex;align-items:center;justify-content:center;text-align:center;padding:11px 8px;border:1px solid var(--linha);border-radius:9px;background:var(--branco);cursor:pointer;font-size:13.5px;font-weight:500;transition:all .12s}
+.estado label:hover{border-color:var(--musgo-cl)}
+.estado input{display:none}
+.estado label.e-ok.on{background:var(--ok-bg);border-color:var(--ok);color:var(--ok);font-weight:600}
+.estado label.e-med.on{background:var(--atencao-bg);border-color:var(--atencao);color:var(--atencao);font-weight:600}
+.estado label.e-bad.on{background:var(--alerta-bg);border-color:var(--alerta);color:var(--alerta);font-weight:600}
+
+/* ---------- tabelas / listas ---------- */
+table.dt{width:100%;border-collapse:collapse;font-size:14px}
+table.dt th{text-align:left;font-weight:600;color:var(--suave);font-size:12px;letter-spacing:.02em;text-transform:uppercase;padding:8px 10px;border-bottom:1px solid var(--linha)}
+table.dt td{padding:10px;border-bottom:1px solid var(--linha-2);vertical-align:middle}
+table.dt tr:last-child td{border-bottom:none}
+.tag{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px}
+.tag.ativo{background:var(--ok-bg);color:var(--ok)}
+.tag.inativo{background:#eee;color:#777}
+.tag.alerta{background:var(--alerta-bg);color:var(--alerta)}
+.tag.aten{background:var(--atencao-bg);color:var(--atencao)}
+.codepill{font-family:ui-monospace,Menlo,monospace;font-size:14px;font-weight:600;letter-spacing:.08em;background:var(--tinta);color:#fff;padding:4px 10px;border-radius:7px;display:inline-block}
+.copy{background:none;border:1px solid var(--linha);border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer;color:var(--suave)}
+.copy:hover{border-color:var(--musgo);color:var(--musgo)}
+
+/* ---------- telas ---------- */
+.screen{display:none;padding:26px 0 60px;animation:fade .2s ease}
+.screen.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* ---------- porta de entrada ---------- */
+.entrada{min-height:calc(100dvh - 60px);display:flex;flex-direction:column;justify-content:center;padding:40px 0}
+.marca-topo{display:flex;align-items:center;gap:13px;margin-bottom:30px}
+.marca-mark{width:46px;height:46px;border-radius:12px;background:var(--musgo);color:#fff;display:grid;place-items:center;font-weight:800;font-size:23px}
+.marca-nome{font-size:22px;font-weight:700;color:var(--tinta);letter-spacing:-.02em;line-height:1.1}
+.marca-sub{font-size:13.5px;color:var(--suave)}
+.portas{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:620px){.portas{grid-template-columns:1fr}}
+.porta{text-align:left;background:var(--papel);border:1px solid var(--linha);border-radius:var(--r);padding:20px;cursor:pointer;transition:all .14s;box-shadow:var(--sombra)}
+.porta:hover{border-color:var(--musgo);transform:translateY(-2px)}
+.porta .ic{width:38px;height:38px;border-radius:10px;background:var(--ok-bg);display:grid;place-items:center;margin-bottom:12px}
+.porta h3{font-size:19px;margin-bottom:3px}
+.porta p{font-size:13.5px;color:var(--suave)}
+.porta.emp{background:var(--tinta);border-color:var(--tinta)}
+.porta.emp h3{color:#fff}.porta.emp p{color:#a9cabb}
+.porta.emp .ic{background:#26493b}
+
+/* toast */
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--tinta);color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:500;opacity:0;pointer-events:none;transition:all .25s;z-index:90;box-shadow:0 10px 30px rgba(0,0,0,.2);max-width:90vw;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.err{background:var(--alerta)}
+
+/* modal */
+.modal-bg{position:fixed;inset:0;background:rgba(15,25,20,.5);display:none;align-items:center;justify-content:center;z-index:80;padding:18px}
+.modal-bg.show{display:flex}
+.modal{background:var(--papel);border-radius:var(--r);max-width:440px;width:100%;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal h3{font-size:20px;margin-bottom:8px}
+.modal p{font-size:14.5px;color:var(--suave);margin-bottom:20px}
+.modal .row{display:flex;gap:10px;justify-content:flex-end}
+
+/* diversos */
+.muted{color:var(--suave)}
+.small{font-size:13px}
+.mt8{margin-top:8px}.mt16{margin-top:16px}.mt24{margin-top:24px}
+.right{text-align:right}
+.center{text-align:center}
+.flex{display:flex;align-items:center;gap:10px}
+.flex.wrap{flex-wrap:wrap}
+.sp{flex:1}
+.divider{height:1px;background:var(--linha);margin:18px 0}
+.aviso{background:var(--atencao-bg);border:1px solid #e6cf9a;border-radius:10px;padding:12px 14px;font-size:13.5px;color:#6b5416}
+.legal{font-size:12px;color:var(--suave);line-height:1.6;background:var(--linha-2);border-radius:10px;padding:14px 16px;margin-top:20px}
+.pill-reg{font-size:12px;color:var(--suave);border:1px solid var(--linha);border-radius:999px;padding:3px 10px}
+.empty{text-align:center;padding:40px 20px;color:var(--suave)}
+.empty h3{color:var(--tinta);margin-bottom:6px;font-size:18px}
+.subnav{display:flex;gap:4px;background:var(--linha-2);padding:4px;border-radius:11px;margin-bottom:20px;overflow-x:auto}
+.subnav button{flex:1;white-space:nowrap;background:none;border:none;font:inherit;font-size:14px;font-weight:600;color:var(--suave);padding:9px 14px;border-radius:8px;cursor:pointer}
+.subnav button.on{background:var(--branco);color:var(--tinta);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.kv{display:flex;font-size:14px;padding:6px 0;border-bottom:1px solid var(--linha-2);gap:12px}
+.kv:last-child{border:none}
+.kv .k{color:var(--suave);min-width:130px;flex:none}
+.kv .v{color:var(--texto);font-weight:500}
+.med-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--linha);border-radius:10px;background:var(--branco);margin-bottom:8px}
+.med-check{width:26px;height:26px;border-radius:7px;border:2px solid var(--linha);flex:none;cursor:pointer;display:grid;place-items:center;transition:all .12s}
+.med-check.on{background:var(--musgo);border-color:var(--musgo)}
+.med-check.on::after{content:"";width:9px;height:14px;border:solid #fff;border-width:0 3px 3px 0;transform:rotate(45deg) translateY(-1px)}
+.diario-card{border:1px solid var(--linha);border-radius:12px;padding:16px;margin-bottom:12px;background:var(--branco)}
+.diario-card .d-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.diario-card .d-data{font-weight:600;color:var(--tinta)}
+.badge-est{font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px}
+.linha-est{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;margin-bottom:8px}
+.linha-est span b{color:var(--suave);font-weight:500}
+.vitais{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;padding:8px 0;border-top:1px solid var(--linha-2);border-bottom:1px solid var(--linha-2);margin:8px 0}
+.vitais b{font-family:ui-monospace,monospace;color:var(--tinta)}
+</style>
+</head>
+<body>
+
+<header class="top" id="topbar" style="display:none">
+  <div class="wrap">
+    <div class="brand"><span class="mark">D</span><div>Dedica Saúde<small id="ctx-papel">Sistema de Cuidado</small></div></div>
+    <div class="sp"></div>
+    <span class="who" id="ctx-who"></span>
+    <button class="btn-sair" onclick="sair()">Sair</button>
+  </div>
+</header>
+
+<main class="wrap" id="app"><!-- telas injetadas --></main>
+
+<div id="toast"></div>
+<div class="modal-bg" id="modalbg"><div class="modal" id="modalbox"></div></div>
+
+<script>
+/* ================= CONFIG SUPABASE ================= */
+const SB_URL = "https://txvrotvqekfimlrqpwly.supabase.co";
+const SB_KEY = "sb_publishable_zfbeBwOpHzdZLT1p33iwiw_TKerr_tE";
+const sb = supabase.createClient(SB_URL, SB_KEY);
+
+/* chamada a RPC com tratamento */
+async function rpc(fn, args={}){
+  const {data,error} = await sb.rpc(fn,args);
+  if(error){console.error('RPC',fn,error);throw new Error(error.message||error.hint||error.details||('Falha em '+fn));}
+  return data;
+}
+
+/* ================= UTIL UI ================= */
+const $ = s=>document.querySelector(s);
+const app = $('#app');
+let toastT;
+function toast(msg,err=false){const t=$('#toast');t.textContent=msg;t.className=err?'err show':'show';clearTimeout(toastT);toastT=setTimeout(()=>t.className=t.className.replace('show',''),2600);}
+function esc(s){return (s??'').toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function copiar(txt){navigator.clipboard.writeText(txt).then(()=>toast('Copiado: '+txt));}
+function idade(nasc){if(!nasc)return'';const d=new Date(nasc);if(isNaN(d))return'';const h=new Date();let a=h.getFullYear()-d.getFullYear();const m=h.getMonth()-d.getMonth();if(m<0||(m===0&&h.getDate()<d.getDate()))a--;return a>=0&&a<130?a+' anos':'';}
+function hojeISO(){return new Date().toISOString().slice(0,10);}
+function fmtData(iso){if(!iso)return'';const [y,m,d]=iso.slice(0,10).split('-');return `${d}/${m}/${y}`;}
+
+function confirmar(titulo,texto,onSim,rotuloSim='Confirmar',perigo=true){
+  $('#modalbox').innerHTML=`<h3>${esc(titulo)}</h3><p>${esc(texto)}</p>
+    <div class="row"><button class="btn ghost sm" onclick="fecharModal()">Cancelar</button>
+    <button class="btn ${perigo?'danger':'primary'} sm" id="mok">${esc(rotuloSim)}</button></div>`;
+  $('#modalbg').classList.add('show');
+  $('#mok').onclick=()=>{fecharModal();onSim();};
+}
+function fecharModal(){$('#modalbg').classList.remove('show');}
+$('#modalbg').addEventListener('click',e=>{if(e.target.id==='modalbg')fecharModal();});
+
+/* navegação de telas: cada tela é uma função que devolve HTML */
+let sessao = {papel:null, codigo:null, cliente:null, admin:null, prof_nome:null};
+
+function setTopbar(papel,who){
+  $('#topbar').style.display = papel? 'block':'none';
+  $('#ctx-papel').textContent = papel||'Sistema de Cuidado';
+  $('#ctx-who').textContent = who||'';
+}
+async function sair(){
+  if(sessao.admin){try{await sb.auth.signOut();}catch(e){}}
+  sessao={papel:null,codigo:null,cliente:null,admin:null,prof_nome:null};
+  setTopbar(null);
+  telaInicial();
+  window.scrollTo(0,0);
+}
+function render(html){app.innerHTML=html;window.scrollTo(0,0);}
+
+/* ============ helpers de formulário ============ */
+// grupo de chips (multi) — devolve array marcada
+function chips(name,opcoes,marcadas=[],radio=false){
+  return `<div class="chips" data-chips="${name}" data-radio="${radio?1:0}">`+
+    opcoes.map(o=>{const on=marcadas.includes(o);
+      return `<label class="chip ${radio?'radio':''} ${on?'on':''}">
+        <span class="dot"></span><input type="${radio?'radio':'checkbox'}" name="${name}" value="${esc(o)}" ${on?'checked':''}>
+        ${esc(o)}</label>`;}).join('')+`</div>`;
+}
+// estado bem/regular/atenção
+function estado(name,opts){ // opts: [{v,label,tipo}] tipo: ok|med|bad
+  return `<div class="estado ${opts.length===4?'q4':''}" data-estado="${name}">`+
+    opts.map(o=>`<label class="e-${o.tipo}"><input type="radio" name="${name}" value="${esc(o.v)}">${esc(o.label)}</label>`).join('')+`</div>`;
+}
+// liga interatividade de chips/estado após render
+function ativarControles(scope=document){
+  scope.querySelectorAll('[data-chips] .chip input').forEach(inp=>{
+    inp.onchange=()=>{
+      const grupo=inp.closest('[data-chips]');
+      if(grupo.dataset.radio==='1') grupo.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+      inp.closest('.chip').classList.toggle('on',inp.checked);
+    };
+  });
+  scope.querySelectorAll('[data-estado]').forEach(g=>{
+    g.querySelectorAll('label').forEach(l=>{
+      l.querySelector('input').onchange=()=>{g.querySelectorAll('label').forEach(x=>x.classList.remove('on'));l.classList.add('on');};
+    });
+  });
+}
+function getChips(scope,name){return [...scope.querySelectorAll(`[data-chips="${name}"] input:checked`)].map(i=>i.value);}
+function getEstado(scope,name){const i=scope.querySelector(`[data-estado="${name}"] input:checked`);return i?i.value:null;}
+function val(scope,id){const el=scope.querySelector('#'+id);return el?el.value.trim():'';}
+
+/* ====== catálogos (do documento) ====== */
+const REGIOES=["Zona sul RJ","Zona Norte RJ","Barra da Tijuca e região","Região Serrana","Região dos Lagos","Macaé e região"];
+const ATIVIDADES=["Companhia e supervisão","Auxílio no banho e higiene pessoal","Auxílio para vestir-se","Auxílio na alimentação","Preparo de refeições simples","Auxílio para caminhar e se locomover","Transferência (cama, cadeira, banho etc.)","Troca de fraldas","Lembrete e organização dos horários de medicamentos","Acompanhamento em consultas e exames","Acompanhamento em passeios e atividades externas","Atividades de estímulo e entretenimento","Organização dos itens de uso pessoal","Acompanhamento durante o sono/período noturno"];
+const PERFIL=["Calmo(a) e paciente","Carinhoso(a) e acolhedor(a)","Comunicativo(a) e boa companhia","Discreto(a) e reservado(a)","Atento(a) e observador(a)","Proativo(a)","Organizado(a) e cuidadoso(a) com a rotina","Pontual e comprometido(a)","Firme para lidar com resistência aos cuidados","Experiência com Alzheimer/demência","Experiência com Oncologia","Experiência com Parkinson","Experiência com sondas","Experiência com pós-operatório ortopedia","Experiência com curativos","Experiência com BIPAP ou O2 domiciliar","Experiência com pessoa acamada / mobilidade reduzida","Experiência com banho, fraldas e higiene","Experiência com alimentação e medicamentos","Lida bem com mudanças de humor","Segue orientações da família","Mantém a família informada","Evita uso excessivo de celular","Estimula atividades, conversas e passeios","Experiência comprovada e boas referências"];
+const MOTIVOS=["Companhia e acompanhamento","Auxílio no banho e higiene","Auxílio na alimentação","Auxílio na mobilidade/locomoção","Supervisão e segurança","Acompanhamento de Alzheimer/demência","Recuperação após cirurgia ou internação","Acompanhamento em consultas e atividades externas","Família trabalha/não pode acompanhar durante o dia","Reduzir a sobrecarga da família","Cuidados gerais no dia a dia"];
+const MOTIVO_SAIDA=["Nunca teve cuidador anteriormente","Pedido de desligamento pelo cuidador","Insatisfação da família","Falta de comprometimento/assiduidade","Dificuldade de relacionamento","Conduta inadequada","Falta de experiência ou qualificação","Incompatibilidade com a rotina","Mudança de horário/escala","Questões financeiras","Fim do período contratado"];
+const ATIV_DIA=["Caminhada","Tomou sol","Banho e higiene pessoal","Fisioterapia","Atendimento Médico","Curativo ou home care","Assistiu TV / Ouviu música","Leitura / Jogos / Atividades cognitivas","Passeio","Atividade religiosa","Descansou","Saiu para atividade externa"];
+const REPOR=["Fraldas","Medicamentos","Material de higiene","Alimentos","Material para curativo"];
+const INTERCORRENCIAS=["Queda","Dor","Febre / Mal-estar","Recusa alimentar","Recusa de medicamento","Agitação","Alteração de comportamento","Confusão / Desorientação","Alteração intestinal","Alteração urinária","Dificuldade de locomoção","Lesão / Alteração na pele"];
+
+/* ícones inline (traço, sem emoji) */
+function ic(n){const p={
+  clipboard:'<path d="M9 4h6v3H9zM7 5H5v15h14V5h-2"/>',
+  heart:'<path d="M12 20s-7-4.5-9-9a4.5 4.5 0 0 1 9-1 4.5 4.5 0 0 1 9 1c-2 4.5-9 9-9 9z"/>',
+  file:'<path d="M7 3h7l4 4v14H7zM14 3v4h4"/>',
+  badge:'<circle cx="12" cy="8" r="4"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>',
+  building:'<path d="M4 21V5l8-3 8 3v16M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01"/>',
+  back:'<path d="M15 18l-6-6 6-6"/>'
+}[n]||'';
+  return `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--musgo)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+}
+
+
+/* ==================================================================
+   TELA: ENTRADA
+================================================================== */
+function telaEntrada(){
+  setTopbar(null);
+  render(`<section class="screen active"><div class="entrada narrow">
+    <div class="marca-topo">
+      <span class="marca-mark">D</span>
+      <div><div class="marca-nome">Dedica Saúde</div><div class="marca-sub">Cuidado domiciliar</div></div>
+    </div>
+    <div class="portas">
+      <button class="porta" onclick="telaCodigo('cuidador')">
+        <div class="ic">${ic('clipboard')}</div>
+        <h3>Sou cuidador</h3><p>Registrar o plantão de hoje</p></button>
+      <button class="porta" onclick="telaCodigo('parente')">
+        <div class="ic">${ic('heart')}</div>
+        <h3>Sou parente</h3><p>Acompanhar o cuidado</p></button>
+      <button class="porta" onclick="telaCadCliente()">
+        <div class="ic">${ic('file')}</div>
+        <h3>Quero contratar</h3><p>Ficha do assistido</p></button>
+      <button class="porta" onclick="telaCadProf()">
+        <div class="ic">${ic('badge')}</div>
+        <h3>Quero ser cuidador</h3><p>Cadastro profissional</p></button>
+    </div>
+  </div></section>`);
+}
+
+/* ==================================================================
+   TELA: ACESSO POR CÓDIGO (cuidador / parente)
+================================================================== */
+function telaCodigo(papel){
+  const eh=papel==='cuidador';
+  render(`<section class="screen active"><div class="narrow" style="padding-top:20px">
+    <button class="btn-voltar" onclick="telaEntrada()">${ic('back')} Início</button>
+    <div class="painel mt16">
+      <h2 style="font-size:23px">${eh?'Entrar como cuidador':'Acompanhar como parente'}</h2>
+      <p class="muted small mt8" style="margin-bottom:18px">${eh?'Digite o código de cuidador que a empresa passou para esta casa. Ele permite registrar o plantão.':'Digite o código de parente da casa. Você acompanha a rotina e o histórico, sem editar os registros.'}</p>
+      <div class="field">
+        <label class="f">Código da casa</label>
+        <input type="text" id="cod" maxlength="6" placeholder="6 letras/números" style="text-transform:uppercase;letter-spacing:.18em;font-family:ui-monospace,monospace;font-size:19px;text-align:center" autocomplete="off">
+      </div>
+      ${eh?`<div class="field"><label class="f">Seu nome (cuidador do plantão)</label>
+        <input type="text" id="pnome" placeholder="Nome de quem está no plantão hoje"></div>`:''}
+      <button class="btn primary wide" id="btnentrar" onclick="entrarCodigo('${papel}')">Entrar</button>
+    </div></div></section>`);
+  $('#cod').focus();
+  $('#cod').addEventListener('keydown',e=>{if(e.key==='Enter')entrarCodigo(papel);});
+}
+
+async function entrarCodigo(papel){
+  const cod=$('#cod').value.trim().toUpperCase();
+  if(cod.length<4){toast('Digite o código da casa',true);return;}
+  const pnome = $('#pnome')? $('#pnome').value.trim():'';
+  if(papel==='cuidador' && !pnome){toast('Informe seu nome',true);return;}
+  const b=$('#btnentrar');b.disabled=true;b.textContent='Entrando…';
+  try{
+    const r=await rpc('cuid_abrir_por_codigo',{p_codigo:cod});
+    if(!r.ok){toast(r.erro,true);b.disabled=false;b.textContent='Entrar';return;}
+    if(papel==='cuidador' && r.papel!=='cuidador'){toast('Este é um código de parente, não de cuidador',true);b.disabled=false;b.textContent='Entrar';return;}
+    sessao.papel=r.papel; sessao.codigo=cod; sessao.cliente=r.cliente; sessao.prof_nome=pnome;
+    if(r.papel==='cuidador') painelCuidador(); else painelParente();
+  }catch(e){toast(e.message,true);b.disabled=false;b.textContent='Entrar';}
+}
+
+/* ==================================================================
+   PAINEL DO CUIDADOR  (diário + medicação + orientações)
+================================================================== */
+function painelCuidador(){
+  const c=sessao.cliente;
+  setTopbar('Cuidador', c.nome);
+  render(`<section class="screen active">
+    <div class="flex" style="margin-bottom:14px"><div>
+      <h2 style="font-size:24px">${esc(c.nome)}</h2>
+      <p class="muted small">${esc(c.endereco||'')}${c.ponto_referencia?' · '+esc(c.ponto_referencia):''}</p>
+    </div></div>
+    <div class="subnav">
+      <button class="on" data-tab="diario" onclick="cuidTab('diario')">Diário de hoje</button>
+      <button data-tab="med" onclick="cuidTab('med')">Medicação</button>
+      <button data-tab="plano" onclick="cuidTab('plano')">Orientações</button>
+    </div>
+    <div id="cuid-body"></div>
+  </section>`);
+  cuidTab('diario');
+}
+function cuidTab(t){
+  document.querySelectorAll('.subnav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
+  if(t==='diario')formDiario();
+  if(t==='med')telaMedicacaoCuidador();
+  if(t==='plano')telaOrientacoes(true);
+}
+
+/* ---------- Diário de acompanhamento ---------- */
+function formDiario(){
+  const body=$('#cuid-body');
+  body.innerHTML=`
+  <div class="painel">
+    <div class="flex" style="margin-bottom:6px"><h3 style="font-size:19px">Diário — ${fmtData(hojeISO())}</h3>
+      <div class="sp"></div><span class="muted small">Cuidador: ${esc(sessao.prof_nome||'')}</span></div>
+
+    <div class="blocotitulo">Estado do plantão</div>
+    ${linhaEstado('passou_plantao','De forma geral, como passou o plantão?',[['Bem','ok'],['Regular','med'],['Requer atenção','bad']])}
+    ${linhaEstado('dormiu','Dormiu bem?',[['Sim','ok'],['Mais ou menos','med'],['Não','bad']])}
+    ${linhaEstado('alimentou','Alimentou-se bem?',[['Bem','ok'],['Parcialmente','med'],['Pouco / Não quis','bad']])}
+    ${linhaEstado('liquidos','Bebeu líquidos adequadamente?',[['Sim','ok'],['Pouco','med'],['Muito pouco / Não','bad']])}
+    ${linhaEstado('humor','Como estava o humor?',[['Tranquilo','ok'],['Oscilante','med'],['Triste / Irritado','bad']])}
+    ${linhaEstado('memoria','Memória e orientação?',[['Como de costume','ok'],['Mais confuso','med'],['Muito confuso','bad']])}
+    ${linhaEstado('mobilidade','Como estava a mobilidade?',[['Como de costume','ok'],['Mais dificuldade','med'],['Precisou de muita ajuda','bad']])}
+    ${linhaEstado('evacuou','Evacuou?',[['Sim','ok'],['Não','med'],['Diarreia','bad'],['Constipação','bad']])}
+    <div class="field"><label class="f">Urina apresentou alteração?</label>
+      ${estado('urina',[{v:'Sem alteração',label:'Sem alteração',tipo:'ok'},{v:'Com alteração',label:'Com alteração',tipo:'bad'}])}
+      <input type="text" id="urina_obs" class="mt8" placeholder="Se houve alteração, descreva">
+    </div>
+
+    <div class="blocotitulo">Sinais vitais <span style="font-size:12px;color:var(--alerta);font-family:Inter">obrigatório</span></div>
+    <div class="grid2">
+      <div class="field"><label class="f">Pressão arterial (PA)</label><input type="text" id="pa" placeholder="ex: 12/8"></div>
+      <div class="field"><label class="f">Saturação (%)</label><input type="text" id="saturacao" placeholder="ex: 97"></div>
+      <div class="field"><label class="f">Temperatura (°C)</label><input type="text" id="temperatura" placeholder="ex: 36,4"></div>
+      <div class="field"><label class="f">Frequência cardíaca (FC)</label><input type="text" id="fc" placeholder="ex: 72"></div>
+    </div>
+
+    <div class="blocotitulo">Rotina e acontecimentos</div>
+    <div class="field"><label class="f">Recebeu visitas?</label>
+      ${estado('recebeu_visitas',[{v:'Não',label:'Não',tipo:'ok'},{v:'Sim',label:'Sim',tipo:'ok'}])}</div>
+    <div class="field"><label class="f">O que fez durante o dia?</label>${chips('atividades_dia',ATIV_DIA)}
+      <input type="text" id="atividades_outro" class="mt8" placeholder="Outro (opcional)"></div>
+    <div class="field"><label class="f">Precisa repor algum item de cuidado?</label>${chips('repor_itens',REPOR)}</div>
+
+    <div class="blocotitulo">Recados e intercorrências</div>
+    <div class="field"><label class="f">Aconteceu alguma situação que a família precisa saber?</label>
+      ${chips('intercorrencias',INTERCORRENCIAS)}
+      <input type="text" id="intercorrencia_outro" class="mt8" placeholder="Outra intercorrência (opcional)"></div>
+    <div class="field"><label class="f">Recado do cuidador para o contratante</label>
+      <textarea id="recado_contratante" placeholder="Opcional"></textarea></div>
+    <div class="field"><label class="f">Informação importante para o próximo cuidador</label>
+      <textarea id="info_proximo" placeholder="Opcional"></textarea></div>
+
+    <button class="btn primary wide mt8" id="btnDiario" onclick="salvarDiario()">Salvar diário do plantão</button>
+  </div>`;
+  ativarControles(body);
+}
+function linhaEstado(name,label,opts){
+  const map={ok:'ok',med:'med',bad:'bad'};
+  return `<div class="field"><label class="f">${esc(label)}</label>${estado(name,opts.map(o=>({v:o[0],label:o[0],tipo:map[o[1]]})))}</div>`;
+}
+async function salvarDiario(){
+  const s=$('#cuid-body');
+  const pa=val(s,'pa'),sat=val(s,'saturacao'),temp=val(s,'temperatura'),fc=val(s,'fc');
+  if(!pa||!sat||!temp||!fc){toast('Preencha os sinais vitais',true);return;}
+  const p={
+    prof_nome:sessao.prof_nome, data:hojeISO(),
+    passou_plantao:getEstado(s,'passou_plantao'),dormiu:getEstado(s,'dormiu'),
+    alimentou:getEstado(s,'alimentou'),liquidos:getEstado(s,'liquidos'),humor:getEstado(s,'humor'),
+    memoria:getEstado(s,'memoria'),mobilidade:getEstado(s,'mobilidade'),evacuou:getEstado(s,'evacuou'),
+    urina:getEstado(s,'urina'),urina_obs:val(s,'urina_obs'),
+    pa,saturacao:sat,temperatura:temp,fc,
+    recebeu_visitas: getEstado(s,'recebeu_visitas')==='Sim',
+    atividades_dia:getChips(s,'atividades_dia'),atividades_outro:val(s,'atividades_outro'),
+    repor_itens:getChips(s,'repor_itens'),
+    intercorrencias:getChips(s,'intercorrencias'),intercorrencia_outro:val(s,'intercorrencia_outro'),
+    recado_contratante:val(s,'recado_contratante'),info_proximo:val(s,'info_proximo')
+  };
+  const b=$('#btnDiario');b.disabled=true;b.textContent='Salvando…';
+  try{
+    const r=await rpc('cuid_salvar_diario',{p_codigo:sessao.codigo,p});
+    if(r.ok){toast('Diário salvo. O parente já pode acompanhar.');b.textContent='Diário salvo ✓';setTimeout(()=>{b.disabled=false;b.textContent='Salvar diário do plantão';},1600);}
+    else{toast(r.erro,true);b.disabled=false;b.textContent='Salvar diário do plantão';}
+  }catch(e){toast(e.message,true);b.disabled=false;b.textContent='Salvar diário do plantão';}
+}
+
+/* ---------- Medicação (cuidador marca administrado) ---------- */
+async function telaMedicacaoCuidador(){
+  const body=$('#cuid-body');body.innerHTML=`<div class="painel"><p class="muted">Carregando medicação…</p></div>`;
+  try{
+    const [meds,regs]=await Promise.all([
+      rpc('cuid_plano_medicamentos',{p_codigo:sessao.codigo}),
+      rpc('cuid_plano_med_registros',{p_codigo:sessao.codigo,p_data:hojeISO()})
+    ]);
+    if(!meds.length){body.innerHTML=`<div class="painel empty"><h3>Sem medicação cadastrada</h3><p>A empresa cadastra os medicamentos a partir da prescrição médica.</p></div>`;return;}
+    const feito=new Set(regs.filter(r=>r.administrado).map(r=>r.medicamento_id+'|'+(r.horario||'')));
+    let h=`<div class="painel"><h3 style="font-size:19px">Medicação de hoje — ${fmtData(hojeISO())}</h3>`;
+    meds.forEach(m=>{
+      h+=`<div style="margin:14px 0 6px;font-weight:600;color:var(--tinta)">${esc(m.nome)}${m.dose?' · '+esc(m.dose):''}${m.via?' · '+esc(m.via):''}</div>`;
+      const hs=(m.horarios&&m.horarios.length)?m.horarios:['—'];
+      hs.forEach(hora=>{
+        const on=feito.has(m.id+'|'+(hora==='—'?'':hora));
+        h+=`<div class="med-item"><div class="med-check ${on?'on':''}" onclick="toggleMed('${m.id}','${hora==='—'?'':hora}',this)"></div>
+          <div><b>${esc(hora)}</b></div><div class="sp"></div>
+          <span class="muted small mchora" data-k="${m.id}|${hora==='—'?'':hora}">${on?'Administrado':''}</span></div>`;
+      });
+      if(m.observacao)h+=`<p class="muted small" style="margin:2px 0 4px">${esc(m.observacao)}</p>`;
+    });
+    h+=`</div>`;body.innerHTML=h;
+  }catch(e){body.innerHTML=`<div class="painel empty"><h3>Erro ao carregar</h3><p>${esc(e.message)}</p></div>`;}
+}
+async function toggleMed(medId,hora,el){
+  const on=!el.classList.contains('on');
+  el.classList.toggle('on',on);
+  const lab=document.querySelector(`.mchora[data-k="${medId}|${hora}"]`);if(lab)lab.textContent=on?'Administrado':'';
+  try{await rpc('cuid_marcar_medicacao',{p_codigo:sessao.codigo,p_medicamento:medId,p_horario:hora,p_data:hojeISO(),p_administrado:on,p_prof_nome:sessao.prof_nome});}
+  catch(e){el.classList.toggle('on',!on);toast(e.message,true);}
+}
+
+/* ---------- Orientações do plano (editável) ---------- */
+function telaOrientacoes(editavel){
+  const body=$('#cuid-body');const c=sessao.cliente;
+  body.innerHTML=`<div class="painel">
+    <h3 style="font-size:19px">Orientações do cuidado</h3>
+    <div class="field"><textarea id="orient" style="min-height:150px" ${editavel?'':'readonly'}>${esc(c.anamnese||'')}</textarea></div>
+    <div class="kv"><span class="k">Doenças/tratamento</span><span class="v">${esc(c.doencas||'—')}</span></div>
+    <div class="kv"><span class="k">Locomoção</span><span class="v">${esc((c.locomocao||[]).join(', ')||'—')}</span></div>
+    <div class="kv"><span class="k">Banho</span><span class="v">${esc(c.banho||'—')}</span></div>
+    <div class="kv"><span class="k">Fraldas</span><span class="v">${esc(c.fraldas||'—')}</span></div>
+    <div class="kv"><span class="k">Período</span><span class="v">${esc(c.periodo||'—')}</span></div>
+    ${editavel?`<button class="btn primary mt16" id="btnOr" onclick="salvarOrient()">Salvar orientações</button>`:''}
+  </div>`;
+}
+async function salvarOrient(){
+  const txt=$('#orient').value.trim();const b=$('#btnOr');b.disabled=true;b.textContent='Salvando…';
+  try{await rpc('cuid_editar_orientacoes',{p_codigo:sessao.codigo,p_texto:txt});sessao.cliente.anamnese=txt;toast('Orientações atualizadas');}
+  catch(e){toast(e.message,true);}
+  b.disabled=false;b.textContent='Salvar orientações';
+}
+
+/* ==================================================================
+   PAINEL DO PARENTE (só acompanha)
+================================================================== */
+async function painelParente(){
+  const c=sessao.cliente;
+  setTopbar('Parente', c.nome);
+  render(`<section class="screen active">
+    <h2 style="font-size:24px">${esc(c.nome)}</h2>
+    <p class="muted small" style="margin-bottom:14px">${esc(c.endereco||'')}</p>
+    <div class="subnav">
+      <button class="on" data-tab="hist" onclick="parTab('hist')">Histórico do cuidado</button>
+      <button data-tab="med" onclick="parTab('med')">Medicação de hoje</button>
+      <button data-tab="plano" onclick="parTab('plano')">Orientações</button>
+    </div>
+    <div id="par-body"><p class="muted">Carregando…</p></div>
+  </section>`);
+  parTab('hist');
+}
+function parTab(t){
+  document.querySelectorAll('.subnav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
+  if(t==='hist')parHistorico();
+  if(t==='med')parMedicacao();
+  if(t==='plano')telaOrientacoesParente();
+}
+async function parHistorico(){
+  const body=$('#par-body');body.innerHTML=`<p class="muted">Carregando histórico…</p>`;
+  try{
+    const ds=await rpc('cuid_plano_diarios',{p_codigo:sessao.codigo,p_dias:30});
+    if(!ds.length){body.innerHTML=`<div class="painel empty"><h3>Ainda sem registros</h3><p>Os plantões aparecem aqui assim que o cuidador preenche o diário.</p></div>`;return;}
+    body.innerHTML=ds.map(cardDiario).join('');
+  }catch(e){body.innerHTML=`<div class="painel empty"><h3>Erro</h3><p>${esc(e.message)}</p></div>`;}
+}
+function estBadge(v){if(!v)return'';const bad=/atenção|não|muito|triste|irritad|diarreia|constipa|alteração/i.test(v);const med=/regular|mais ou menos|parcial|pouco|oscil|dificuldade|confus/i.test(v);
+  const cls=bad?'bad':med?'med':'ok';const cor={ok:'var(--ok-bg);color:var(--ok)',med:'var(--atencao-bg);color:var(--atencao)',bad:'var(--alerta-bg);color:var(--alerta)'}[cls];
+  return `<span class="badge-est" style="background:${cor}">${esc(v)}</span>`;}
+function cardDiario(d){
+  const inter=(d.intercorrencias||[]).filter(Boolean);
+  const alerta=inter.length||/atenção|requer/i.test(d.passou_plantao||'');
+  return `<div class="diario-card">
+    <div class="d-top"><span class="d-data">${fmtData(d.data)}</span>
+      ${estBadge(d.passou_plantao)}
+      <div class="sp"></div><span class="muted small">${esc(d.prof_nome||'')}</span></div>
+    <div class="linha-est">
+      ${d.dormiu?`<span><b>Sono:</b> ${esc(d.dormiu)}</span>`:''}
+      ${d.alimentou?`<span><b>Alimentação:</b> ${esc(d.alimentou)}</span>`:''}
+      ${d.humor?`<span><b>Humor:</b> ${esc(d.humor)}</span>`:''}
+      ${d.mobilidade?`<span><b>Mobilidade:</b> ${esc(d.mobilidade)}</span>`:''}
+      ${d.evacuou?`<span><b>Evacuou:</b> ${esc(d.evacuou)}</span>`:''}
+    </div>
+    <div class="vitais">
+      <span>PA <b>${esc(d.pa||'—')}</b></span><span>Sat <b>${esc(d.saturacao||'—')}</b></span>
+      <span>Temp <b>${esc(d.temperatura||'—')}°</b></span><span>FC <b>${esc(d.fc||'—')}</b></span></div>
+    ${(d.atividades_dia&&d.atividades_dia.length)?`<p class="small" style="margin:6px 0"><b class="muted">Dia:</b> ${esc(d.atividades_dia.join(', '))}${d.atividades_outro?', '+esc(d.atividades_outro):''}</p>`:''}
+    ${alerta?`<div class="aviso mt8" style="background:var(--alerta-bg);border-color:#e6b3a8;color:var(--alerta)">
+      <b>Intercorrência:</b> ${esc(inter.join(', ')||'requer atenção')}${d.intercorrencia_outro?', '+esc(d.intercorrencia_outro):''}</div>`:''}
+    ${(d.repor_itens&&d.repor_itens.length)?`<p class="small mt8"><b class="muted">Repor:</b> ${esc(d.repor_itens.join(', '))}</p>`:''}
+    ${d.recado_contratante?`<p class="small mt8"><b class="muted">Recado:</b> ${esc(d.recado_contratante)}</p>`:''}
+  </div>`;
+}
+async function parMedicacao(){
+  const body=$('#par-body');body.innerHTML=`<p class="muted">Carregando…</p>`;
+  try{
+    const [meds,regs]=await Promise.all([
+      rpc('cuid_plano_medicamentos',{p_codigo:sessao.codigo}),
+      rpc('cuid_plano_med_registros',{p_codigo:sessao.codigo,p_data:hojeISO()})]);
+    if(!meds.length){body.innerHTML=`<div class="painel empty"><h3>Sem medicação cadastrada</h3></div>`;return;}
+    const feito=new Set(regs.filter(r=>r.administrado).map(r=>r.medicamento_id+'|'+(r.horario||'')));
+    let h=`<div class="painel"><h3 style="font-size:19px">Medicação de hoje</h3>`;
+    meds.forEach(m=>{h+=`<div style="margin:14px 0 6px;font-weight:600">${esc(m.nome)}${m.dose?' · '+esc(m.dose):''}</div>`;
+      (m.horarios&&m.horarios.length?m.horarios:['—']).forEach(hora=>{const on=feito.has(m.id+'|'+(hora==='—'?'':hora));
+        h+=`<div class="med-item"><div class="med-check ${on?'on':''}" style="pointer-events:none"></div><b>${esc(hora)}</b><div class="sp"></div><span class="muted small">${on?'Administrado':'Pendente'}</span></div>`;});});
+    h+=`</div>`;body.innerHTML=h;
+  }catch(e){body.innerHTML=`<div class="painel empty"><h3>Erro</h3><p>${esc(e.message)}</p></div>`;}
+}
+function telaOrientacoesParente(){
+  const body=$('#par-body');const c=sessao.cliente;
+  body.innerHTML=`<div class="painel">
+    <h3 style="font-size:19px">Orientações do cuidado</h3>
+    <div class="field mt8"><textarea id="orient" style="min-height:130px">${esc(c.anamnese||'')}</textarea></div>
+    <button class="btn primary" id="btnOr" onclick="salvarOrient()">Salvar orientações</button>
+  </div>`;
+}
+
+/* ==================================================================
+   CADASTRO DO ASSISTIDO + CONTRATANTE  (ficha completa)
+================================================================== */
+function telaCadCliente(){
+  setTopbar(null);
+  render(`<section class="screen active"><div class="narrow" style="padding-top:16px">
+    <button class="btn-voltar" onclick="telaEntrada()">${ic('back')} Início</button>
+    <div class="painel mt16" id="formCli">
+      <h2 style="font-size:24px">Ficha de cadastro</h2>
+
+      <div class="blocotitulo">Assistido</div>
+      <div class="field"><label class="f">Nome completo</label><input type="text" id="assistido_nome"></div>
+      <div class="grid3">
+        <div class="field"><label class="f">Data de nascimento</label><input type="date" id="assistido_nasc" onchange="mostraIdade(this)"><span class="hint" id="idadeHint"></span></div>
+        <div class="field"><label class="f">Peso (kg)</label><input type="number" id="assistido_peso" step="0.1"></div>
+        <div class="field"><label class="f">Altura (m)</label><input type="number" id="assistido_altura" step="0.01"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label class="f">CEP</label><input type="text" id="end_cep" onblur="buscaCep(this.value)" placeholder="00000-000"></div>
+        <div class="field"><label class="f">Telefone celular</label><input type="tel" id="telefone"></div>
+      </div>
+      <div class="grid3">
+        <div class="field" style="grid-column:span 2"><label class="f">Rua</label><input type="text" id="end_rua"></div>
+        <div class="field"><label class="f">Número</label><input type="text" id="end_numero"></div>
+      </div>
+      <div class="grid3">
+        <div class="field"><label class="f">Complemento</label><input type="text" id="end_complemento"></div>
+        <div class="field"><label class="f">Bairro</label><input type="text" id="end_bairro"></div>
+        <div class="field"><label class="f">Município</label><input type="text" id="end_municipio"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label class="f">Estado</label><input type="text" id="end_estado" maxlength="2" placeholder="RJ"></div>
+        <div class="field"><label class="f">Ponto de referência</label><input type="text" id="ponto_referencia"></div>
+      </div>
+      <div class="field"><label class="f">Região de residência</label>${chips('regiao',REGIOES,[],true)}</div>
+
+      <div class="blocotitulo">Sobre o local</div>
+      <div class="field"><label class="f">Com quem o assistido reside</label>${chips('reside_com',["Familiares","Sozinho(a)","ILPI","Outros"],[],true)}</div>
+      <div class="field"><label class="f">A casa tem funcionários para os cuidados do lar?</label>${chips('funcionarios_lar',["Não","Sim, 3x/semana ou mais","Sim, menos de 3x/semana","Apenas deixar refeições prontas"],[],true)}</div>
+      <div class="field"><label class="f">Animais de estimação</label>${chips('animais',["Cão","Gato","Ave","Não tem"])}</div>
+
+      <div class="blocotitulo">Situação de saúde</div>
+      <div class="field"><label class="f">Doenças e tratamentos de saúde</label><textarea id="doencas"></textarea></div>
+      <div class="field"><label class="f">Realizou cirurgias recentes?</label>${chips('cirurgia_recente',["Não","Sim"],[],true)}
+        <input type="text" id="cirurgia_qual" class="mt8" placeholder="Se sim, qual?"></div>
+      <div class="field"><label class="f">Lucidez</label>${chips('lucidez',["Sim","Não","Perda de memória recente"],[],true)}</div>
+      <div class="field"><label class="f">Comunicação</label>${chips('comunicacao',["Normal","Com dificuldade","Não interage"],[],true)}</div>
+      <div class="field"><label class="f">Comportamento</label>${chips('comportamento',["Calmo","Agitado","Ansioso","Agressivo"],[],true)}</div>
+      <div class="field"><label class="f">Sono</label>${chips('sono',["Regular","Poucas horas","Intermitente","Sonolento"],[],true)}</div>
+      <div class="field"><label class="f">Alimentação</label>${chips('alimentacao',["Sem auxílio","Com auxílio","Via oral","Por sonda"],[],true)}</div>
+      <div class="field"><label class="f">Locomoção em casa</label>${chips('locomocao',["Cadeira de rodas","Acamado","Bengala","Andador","Auxílio pessoal","Sem auxílio"])}</div>
+      <div class="field"><label class="f">Medicação</label>${chips('medicacao',["Via oral","Subcutânea","Intramuscular","Injetável","Pomadas","Adesivo"])}</div>
+      <div class="field"><label class="f">Banho</label>${chips('banho',["Leito/cama","Cadeira higiênica","De pé no chuveiro com auxílio","Sentado no chuveiro","Sozinho"],[],true)}</div>
+      <div class="field"><label class="f">Fraldas</label>${chips('fraldas',["Dia e noite","Somente noite","Não usa","Por sonda"],[],true)}</div>
+      <div class="field"><label class="f">Recebe assistência em casa de</label>${chips('assistencia_casa',["Fisioterapeuta","Fonoaudiólogo","Nutricionista","Outro profissional"])}</div>
+
+      <div class="blocotitulo">Rotina de cuidados</div>
+      <div class="field"><label class="f">Principais motivos da solicitação</label>${chips('motivos_solicitacao',MOTIVOS)}</div>
+      <div class="field"><label class="f">Atividades que o cuidador deverá realizar</label>${chips('atividades_cuidador',ATIVIDADES)}</div>
+
+      <div class="blocotitulo">Dados do serviço</div>
+      <div class="field"><label class="f">Orientação de vestimenta</label>${chips('vestimenta',["Jaleco","Roupa branca","Roupa comum","Sem preferência"],[],true)}</div>
+      <div class="field"><label class="f">A casa fornece alimentação ao cuidador?</label>${chips('fornece_alimentacao',["Sim","Não"],[],true)}</div>
+      <div class="field"><label class="f">Período solicitado</label>${chips('periodo',["Até 12 horas diurno","Até 12 horas noturno","24 horas"],[],true)}</div>
+      <div class="grid2">
+        <div class="field"><label class="f">Data desejada</label><input type="date" id="data_atendimento"></div>
+        <div class="field"><label class="f">Horário de início</label>${chips('horario_inicio',["07h","08h","09h","18h","19h","20h"],[],true)}</div>
+      </div>
+
+      <div class="blocotitulo">Seleção do profissional <span style="font-size:12px;color:var(--suave);font-weight:500">interno</span></div>
+      <div class="field"><label class="f">Motivo da saída do último cuidador</label>${chips('motivo_saida_ultimo',MOTIVO_SAIDA)}</div>
+      <div class="field"><label class="f">Perfil ideal para o cuidador</label>${chips('perfil_ideal',PERFIL)}</div>
+      <div class="field"><label class="f">Algo que você NÃO aceita, ou informação extra</label><textarea id="nao_aceita"></textarea></div>
+
+      <div class="blocotitulo">Contratante (quem assina o contrato)</div>
+      <div class="field"><label class="f">Nome completo</label><input type="text" id="contr_nome"></div>
+      <div class="grid2">
+        <div class="field"><label class="f">CPF</label><input type="text" id="contr_cpf"></div>
+        <div class="field"><label class="f">RG</label><input type="text" id="contr_rg"></div>
+      </div>
+      <div class="field"><label class="f">Endereço</label><input type="text" id="contr_endereco"></div>
+      <div class="grid3">
+        <div class="field"><label class="f">Bairro</label><input type="text" id="contr_bairro"></div>
+        <div class="field"><label class="f">CEP</label><input type="text" id="contr_cep"></div>
+        <div class="field"><label class="f">Estado civil</label><input type="text" id="contr_estado_civil"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label class="f">E-mail</label><input type="email" id="contr_email"></div>
+        <div class="field"><label class="f">Profissão</label><input type="text" id="contr_profissao"></div>
+      </div>
+      <div class="field"><label class="f">Telefones para contato do responsável</label><input type="text" id="contr_telefones"></div>
+      <button class="btn primary wide mt16" id="btnCli" onclick="salvarCliente()">Enviar cadastro</button>
+    </div></div></section>`);
+  ativarControles($('#formCli'));
+}
+function mostraIdade(el){const i=idade(el.value);$('#idadeHint').textContent=i?('Idade: '+i):'';}
+async function buscaCep(cep){
+  cep=(cep||'').replace(/\D/g,'');if(cep.length!==8)return;
+  try{const r=await fetch(`https://viacep.com.br/ws/${cep}/json/`);const d=await r.json();
+    if(d.erro)return;
+    const set=(id,v)=>{const e=$('#'+id);if(e&&!e.value)e.value=v||'';};
+    set('end_rua',d.logradouro);set('end_bairro',d.bairro);set('end_municipio',d.localidade);set('end_estado',d.uf);
+  }catch(e){}
+}
+async function salvarCliente(){
+  const s=$('#formCli');
+  if(!val(s,'assistido_nome')){toast('Informe o nome do assistido',true);return;}
+  const rc=getChips(s,'reside_com'), fl=getChips(s,'funcionarios_lar');
+  const p={
+    assistido_nome:val(s,'assistido_nome'),assistido_nasc:val(s,'assistido_nasc'),
+    assistido_peso:val(s,'assistido_peso'),assistido_altura:val(s,'assistido_altura'),
+    end_cep:val(s,'end_cep'),end_rua:val(s,'end_rua'),end_numero:val(s,'end_numero'),
+    end_complemento:val(s,'end_complemento'),end_bairro:val(s,'end_bairro'),
+    end_municipio:val(s,'end_municipio'),end_estado:val(s,'end_estado'),
+    ponto_referencia:val(s,'ponto_referencia'),telefone:val(s,'telefone'),
+    regiao:(getChips(s,'regiao')[0]||''),reside_com:(rc[0]||''),funcionarios_lar:(fl[0]||''),
+    animais:getChips(s,'animais'),doencas:val(s,'doencas'),
+    cirurgia_recente: getChips(s,'cirurgia_recente')[0]==='Sim'?true:(getChips(s,'cirurgia_recente')[0]==='Não'?false:''),
+    cirurgia_qual:val(s,'cirurgia_qual'),
+    lucidez:(getChips(s,'lucidez')[0]||''),comunicacao:(getChips(s,'comunicacao')[0]||''),
+    comportamento:(getChips(s,'comportamento')[0]||''),sono:(getChips(s,'sono')[0]||''),
+    alimentacao:(getChips(s,'alimentacao')[0]||''),locomocao:getChips(s,'locomocao'),
+    medicacao:getChips(s,'medicacao'),banho:(getChips(s,'banho')[0]||''),fraldas:(getChips(s,'fraldas')[0]||''),
+    assistencia_casa:getChips(s,'assistencia_casa'),
+    motivos_solicitacao:getChips(s,'motivos_solicitacao'),atividades_cuidador:getChips(s,'atividades_cuidador'),
+    vestimenta:(getChips(s,'vestimenta')[0]||''),
+    fornece_alimentacao: getChips(s,'fornece_alimentacao')[0]==='Sim'?true:(getChips(s,'fornece_alimentacao')[0]==='Não'?false:''),
+    periodo:(getChips(s,'periodo')[0]||''),data_atendimento:val(s,'data_atendimento'),
+    horario_inicio:(getChips(s,'horario_inicio')[0]||''),
+    motivo_saida_ultimo:getChips(s,'motivo_saida_ultimo'),perfil_ideal:getChips(s,'perfil_ideal'),
+    nao_aceita:val(s,'nao_aceita'),
+    contr_nome:val(s,'contr_nome'),contr_cpf:val(s,'contr_cpf'),contr_rg:val(s,'contr_rg'),
+    contr_endereco:val(s,'contr_endereco'),contr_bairro:val(s,'contr_bairro'),contr_cep:val(s,'contr_cep'),
+    contr_estado_civil:val(s,'contr_estado_civil'),contr_email:val(s,'contr_email'),
+    contr_profissao:val(s,'contr_profissao'),contr_telefones:val(s,'contr_telefones')
+  };
+  const b=$('#btnCli');b.disabled=true;b.textContent='Enviando…';
+  try{const r=await rpc('cuid_cliente_cadastrar',{p});
+    if(r.ok){telaSucesso('Cadastro enviado','A enfermeira da empresa entrará em contato para formalizar o atendimento e enviar o contrato.','Protocolo do assistido',r.codigo_cliente);}
+    else{toast(r.erro||'Falha',true);b.disabled=false;b.textContent='Enviar cadastro';}
+  }catch(e){toast(e.message,true);b.disabled=false;b.textContent='Enviar cadastro';}
+}
+function telaSucesso(titulo,texto,rotulo,codigo){
+  setTopbar(null);
+  render(`<section class="screen active"><div class="narrow center" style="padding-top:60px">
+    <div class="painel pad">
+      <div style="width:56px;height:56px;border-radius:50%;background:var(--ok-bg);display:grid;place-items:center;margin:0 auto 16px">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></div>
+      <h2 style="font-size:24px">${esc(titulo)}</h2>
+      <p class="muted mt8" style="margin-bottom:18px">${esc(texto)}</p>
+      ${codigo?`<div class="small muted">${esc(rotulo)}</div><div class="mt8"><span class="codepill">${esc(codigo)}</span></div>`:''}
+      <button class="btn ghost mt24" onclick="telaEntrada()">Voltar ao início</button>
+    </div></div></section>`);
+}
+
+/* ==================================================================
+   CADASTRO DO PROFISSIONAL (cuidador)
+================================================================== */
+function telaCadProf(){
+  setTopbar(null);
+  render(`<section class="screen active"><div class="narrow" style="padding-top:16px">
+    <button class="btn-voltar" onclick="telaEntrada()">${ic('back')} Início</button>
+    <div class="painel mt16" id="formProf">
+      <h2 style="font-size:24px">Cadastro profissional</h2>
+
+      <div class="blocotitulo">Dados pessoais</div>
+      <div class="field"><label class="f">Nome completo</label><input type="text" id="nome"></div>
+      <div class="grid3">
+        <div class="field"><label class="f">Data de nascimento</label><input type="date" id="data_nasc"></div>
+        <div class="field"><label class="f">Sexo</label>${chips('sexo',["Masculino","Feminino"],[],true)}</div>
+        <div class="field"><label class="f">Filhos</label>${chips('filhos',["Sim","Não"],[],true)}</div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label class="f">Peso (kg)</label><input type="number" id="peso" step="0.1"></div>
+        <div class="field"><label class="f">Altura (m)</label><input type="number" id="altura" step="0.01"></div>
+      </div>
+      <div class="field"><label class="f">Estado civil</label>${chips('estado_civil',["Solteiro(a)","Casado(a)","União estável","Separado(a)","Divorciado(a)","Viúvo(a)"],[],true)}</div>
+      <div class="grid2">
+        <div class="field"><label class="f">CPF</label><input type="text" id="cpf"></div>
+        <div class="field"><label class="f">CNPJ (se tiver)</label><input type="text" id="cnpj"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label class="f">E-mail</label><input type="email" id="email"></div>
+        <div class="field"><label class="f">Celular</label><input type="tel" id="celular"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label class="f">Celular de recado</label><input type="tel" id="celular_recado"></div>
+        <div class="field"><label class="f">Endereço</label><input type="text" id="endereco"></div>
+      </div>
+
+      <div class="blocotitulo">Formação</div>
+      <div class="field"><label class="f">Grau de escolaridade</label>${chips('escolaridade',["Fundamental","Médio","Superior completo","Superior incompleto"],[],true)}</div>
+      <div class="field"><label class="f">Formação</label>${chips('formacao',["Enfermeiro(a)","Técnico(a)/Auxiliar em Enfermagem","Cuidador(a) de Pessoas"],[],true)}</div>
+      <div class="field"><label class="f">Outros cursos/formações</label><input type="text" id="outros_cursos"></div>
+      <div class="grid2">
+        <div class="field"><label class="f">Escola de formação</label><input type="text" id="escola_formacao"></div>
+        <div class="field"><label class="f">Ano de término</label><input type="text" id="ano_termino" placeholder="ex: 2021"></div>
+      </div>
+
+      <div class="blocotitulo">Saúde e hábitos</div>
+      <div class="field"><label class="f">Você fuma?</label>${chips('fuma',["Sim","Não","Ocasionalmente"],[],true)}</div>
+      <div class="field"><label class="f">Consome bebida alcoólica?</label>${chips('bebe',["Sim","Não","Ocasionalmente"],[],true)}</div>
+      <div class="field"><label class="f">Tratamentos ou doenças que possui</label><textarea id="tratamentos_saude"></textarea></div>
+      <div class="field"><label class="f">Possui alergia/doença que interfira no cuidado?</label>${chips('possui_alergia',["Sim","Não"],[],true)}</div>
+      <div class="field"><label class="f">Possui deficiência física ou cognitiva?</label>${chips('possui_deficiencia',["Sim","Não"],[],true)}</div>
+      <div class="field"><label class="f">Restrição para esforço físico / mobilidade do assistido?</label>${chips('restricao_esforco',["Sim","Não"],[],true)}</div>
+      <div class="field"><label class="f">Consegue auxiliar a levantar, sentar e caminhar?</label>${chips('auxilia_locomocao',["Sim","Não"],[],true)}</div>
+      <div class="field"><label class="f">Restrição para trabalhar em casa com animais?</label>${chips('restricao_animais',["Sim","Não"],[],true)}</div>
+
+      <div class="blocotitulo">Rotina como cuidador</div>
+      <div class="field"><label class="f">Está trabalhando atualmente?</label>${chips('trabalhando_atual',["Sim","Não"],[],true)}</div>
+      <div class="field"><label class="f">Atividades que sabe realizar</label>${chips('atividades_sabe',ATIVIDADES)}</div>
+      <div id="expWrap"></div>
+      <button class="btn ghost sm" type="button" onclick="addExp()">+ Adicionar experiência</button>
+
+      <div class="blocotitulo">Disponibilidade</div>
+      <div class="field"><label class="f">Como gosta de trabalhar</label>${chips('como_trabalha',["Jaleco","Roupa branca","Roupa comum","Sem preferência"],[],true)}</div>
+      <div class="field"><label class="f">Disponibilidade de horário</label>${chips('disponibilidade',["Até 12 horas diurno","Até 12 horas noturno","24 horas","Sem restrição"],[],true)}</div>
+      <div class="field"><label class="f">Condição, tipo de cliente ou limitação a informar</label><textarea id="condicao_limitacao"></textarea></div>
+      <div class="field"><label class="f">Regiões que você atende</label>${chips('regioes_atende',REGIOES)}</div>
+      <div class="field"><label class="f">O que mais lhe define</label>${chips('perfil_define',PERFIL)}</div>
+
+      <div class="blocotitulo">Dados bancários</div>
+      <div class="field"><label class="f">Chave Pix</label><input type="text" id="pix"></div>
+      <div class="grid3">
+        <div class="field"><label class="f">Banco</label><input type="text" id="banco"></div>
+        <div class="field"><label class="f">Agência</label><input type="text" id="agencia"></div>
+        <div class="field"><label class="f">Conta</label><input type="text" id="conta"></div>
+      </div>
+      <button class="btn primary wide mt16" id="btnProf" onclick="salvarProf()">Enviar cadastro</button>
+    </div></div></section>`);
+  ativarControles($('#formProf'));
+  addExp();
+}
+let expN=0;
+function addExp(){
+  if(expN>=3){toast('Máximo de 3 experiências');return;}
+  expN++;const w=$('#expWrap');const div=document.createElement('div');
+  div.className='card pad';div.style.margin='10px 0';div.style.background='var(--branco)';
+  div.innerHTML=`<div class="flex" style="margin-bottom:10px"><b class="small">Experiência ${expN}</b><div class="sp"></div>
+    <button class="btn-link small" type="button" onclick="this.closest('.card').remove()">remover</button></div>
+    <div class="field" data-exp><label class="f">Local</label>${chips('exp_local_'+expN,["Lar de idosos","Cuidador(a) domiciliar","Hospitalar","Outro"],[],true)}</div>
+    <div class="grid2"><div class="field"><label class="f">Início</label><input type="month" class="exp_inicio"></div>
+    <div class="field"><label class="f">Fim (ou deixe vazio se atual)</label><input type="month" class="exp_fim"></div></div>
+    <div class="grid2"><div class="field"><label class="f">Contratante (referência)</label><input type="text" class="exp_ref"></div>
+    <div class="field"><label class="f">Telefone da referência</label><input type="tel" class="exp_tel"></div></div>`;
+  w.appendChild(div);ativarControles(div);
+}
+async function salvarProf(){
+  const s=$('#formProf');
+  if(!val(s,'nome')){toast('Informe o nome',true);return;}
+  const g1=n=>(getChips(s,n)[0]||'');
+  const b3=n=>{const v=g1(n);return v==='Sim'?true:(v==='Não'?false:'');};
+  const exps=[...s.querySelectorAll('#expWrap .card')].map((d,i)=>({
+    local:([...d.querySelectorAll('[data-chips] input:checked')][0]||{}).value||'',
+    inicio:d.querySelector('.exp_inicio').value,fim:d.querySelector('.exp_fim').value||'Atual',
+    ref_nome:d.querySelector('.exp_ref').value.trim(),ref_telefone:d.querySelector('.exp_tel').value.trim()
+  })).filter(e=>e.local||e.ref_nome);
+  const p={
+    nome:val(s,'nome'),data_nasc:val(s,'data_nasc'),cnpj:val(s,'cnpj'),
+    sexo:g1('sexo'),peso:val(s,'peso'),altura:val(s,'altura'),filhos:b3('filhos'),
+    estado_civil:g1('estado_civil'),cpf:val(s,'cpf'),email:val(s,'email'),
+    celular:val(s,'celular'),celular_recado:val(s,'celular_recado'),endereco:val(s,'endereco'),
+    escolaridade:g1('escolaridade'),formacao:g1('formacao'),outros_cursos:val(s,'outros_cursos'),
+    escola_formacao:val(s,'escola_formacao'),ano_termino:val(s,'ano_termino'),
+    fuma:g1('fuma'),bebe:g1('bebe'),tratamentos_saude:val(s,'tratamentos_saude'),
+    possui_alergia:b3('possui_alergia'),possui_deficiencia:b3('possui_deficiencia'),
+    restricao_esforco:b3('restricao_esforco'),auxilia_locomocao:b3('auxilia_locomocao'),
+    restricao_animais:b3('restricao_animais'),trabalhando_atual:b3('trabalhando_atual'),
+    atividades_sabe:getChips(s,'atividades_sabe'),como_trabalha:g1('como_trabalha'),
+    disponibilidade:g1('disponibilidade'),condicao_limitacao:val(s,'condicao_limitacao'),
+    regioes_atende:getChips(s,'regioes_atende'),perfil_define:getChips(s,'perfil_define'),
+    pix:val(s,'pix'),banco:val(s,'banco'),agencia:val(s,'agencia'),conta:val(s,'conta'),
+    experiencias:exps
+  };
+  const b=$('#btnProf');b.disabled=true;b.textContent='Enviando…';
+  try{const r=await rpc('cuid_profissional_cadastrar',{p});
+    if(r.ok){telaSucesso('Cadastro enviado','A administração entrará em contato para agendar a apresentação dos documentos.','Protocolo profissional',r.codigo_profissional);}
+    else{toast(r.erro||'Falha',true);b.disabled=false;b.textContent='Enviar cadastro';}
+  }catch(e){toast(e.message,true);b.disabled=false;b.textContent='Enviar cadastro';}
+}
+
+
+/* boot */
+function telaInicial(){telaEntrada();}
+telaInicial();
+</script>
+</body>
+</html>
