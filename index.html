@@ -362,7 +362,7 @@ function telaCodigo(papel){
       <p class="muted small mt8" style="margin-bottom:18px">${eh?'Digite o código de cuidador que a empresa passou para esta casa. Ele permite registrar o plantão.':'Digite o código de parente da casa. Você acompanha a rotina e o histórico, sem editar os registros.'}</p>
       <div class="field">
         <label class="f">Código da casa</label>
-        <input type="text" id="cod" maxlength="6" placeholder="6 letras/números" style="text-transform:uppercase;letter-spacing:.18em;font-family:ui-monospace,monospace;font-size:19px;text-align:center" autocomplete="off">
+        <input type="text" id="cod" maxlength="10" placeholder="código da casa" style="text-transform:uppercase;letter-spacing:.14em;font-family:ui-monospace,monospace;font-size:19px;text-align:center" autocomplete="off">
       </div>
       ${eh?`<div class="field"><label class="f">Seu nome (cuidador do plantão)</label>
         <input type="text" id="pnome" placeholder="Nome de quem está no plantão hoje"></div>`:''}
